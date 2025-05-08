@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simple Pokédex - First 50 (Animated)</title>
+    <title>Complete Pokédex - All Generations</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
@@ -160,6 +160,26 @@
         .sound-btn:hover {
             background-color: #2563eb;
         }
+        .region-btn {
+            padding: 0.5rem 1rem;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            margin: 0.25rem;
+            border: 2px solid transparent;
+            font-weight: 600;
+        }
+        .region-btn.active {
+            border-color: currentColor;
+            transform: scale(1.05);
+        }
+        .region-kanto { background-color: #ef4444; color: white; }
+        .region-johto { background-color: #f59e0b; color: white; }
+        .region-hoenn { background-color: #10b981; color: white; }
+        .region-sinnoh { background-color: #3b82f6; color: white; }
+        .region-unova { background-color: #8b5cf6; color: white; }
+        .region-kalos { background-color: #ec4899; color: white; }
+        .region-alola { background-color: #f97316; color: white; }
+        .region-galar { background-color: #06b6d4; color: white; }
         @media (max-width: 640px) {
             .stats-grid {
                 grid-template-columns: 1fr;
@@ -167,14 +187,29 @@
             .modal-content {
                 margin: 1rem auto;
             }
+            .region-selector {
+                flex-direction: column;
+            }
         }
     </style>
 </head>
 <body class="bg-gray-100 p-4 md:p-8">
 
     <header class="text-center mb-8 md:mb-12">
-        <h1 class="text-3xl md:text-4xl font-bold text-red-600">Simple Pokédex</h1>
-        <p class="text-lg text-gray-700">The First 50 Pokémon (Animated)</p>
+        <h1 class="text-3xl md:text-4xl font-bold text-red-600">Complete Pokédex</h1>
+        <p class="text-lg text-gray-700">All Generations (1-8)</p>
+        
+        <!-- Region Selector -->
+        <div class="region-selector flex flex-wrap justify-center my-6 gap-2">
+            <button class="region-btn region-kanto active" data-region="kanto" data-start="1" data-end="151">Kanto (Gen 1)</button>
+            <button class="region-btn region-johto" data-region="johto" data-start="152" data-end="251">Johto (Gen 2)</button>
+            <button class="region-btn region-hoenn" data-region="hoenn" data-start="252" data-end="386">Hoenn (Gen 3)</button>
+            <button class="region-btn region-sinnoh" data-region="sinnoh" data-start="387" data-end="493">Sinnoh (Gen 4)</button>
+            <button class="region-btn region-unova" data-region="unova" data-start="494" data-end="649">Unova (Gen 5)</button>
+            <button class="region-btn region-kalos" data-region="kalos" data-start="650" data-end="721">Kalos (Gen 6)</button>
+            <button class="region-btn region-alola" data-region="alola" data-start="722" data-end="809">Alola (Gen 7)</button>
+            <button class="region-btn region-galar" data-region="galar" data-start="810" data-end="898">Galar (Gen 8)</button>
+        </div>
     </header>
 
     <div id="loading">Loading Pokémon data... Please wait.</div>
@@ -246,14 +281,14 @@
     </div>
 
     <footer class="text-center mt-8 md:mt-12 text-gray-500 text-sm">
-        Data sourced from <a href="https://pokeapi.co/" target="_blank" rel="noopener noreferrer" class="text-blue-500 hover:underline">PokéAPI</a>. Animated sprites from Generation V.
+        Data sourced from <a href="https://pokeapi.co/" target="_blank" rel="noopener noreferrer" class="text-blue-500 hover:underline">PokéAPI</a>. Sprites from various generations.
     </footer>
 
     <script>
         const pokedexContainer = document.getElementById('pokedex');
         const loadingIndicator = document.getElementById('loading');
-        const POKEMON_COUNT = 151;
         const POKEAPI_URL = 'https://pokeapi.co/api/v2/';
+        const regionButtons = document.querySelectorAll('.region-btn');
         
         // Modal elements
         const modal = document.getElementById('pokemonModal');
@@ -274,30 +309,96 @@
         const tabs = document.querySelectorAll('.tab');
         const tabContents = document.querySelectorAll('.tab-content');
         
-        tabs.forEach(tab => {
-            tab.addEventListener('click', () => {
-                // Remove active class from all tabs and contents
-                tabs.forEach(t => t.classList.remove('active'));
-                tabContents.forEach(c => c.classList.remove('active'));
-                
-                // Add active class to clicked tab and corresponding content
-                tab.classList.add('active');
-                const tabId = tab.getAttribute('data-tab') + 'Tab';
-                document.getElementById(tabId).classList.add('active');
+        // Current region data
+        let currentRegion = {
+            name: 'kanto',
+            start: 1,
+            end: 151
+        };
+        
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', () => {
+            // Set up tab functionality
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tabContents.forEach(c => c.classList.remove('active'));
+                    
+                    tab.classList.add('active');
+                    const tabId = tab.getAttribute('data-tab') + 'Tab';
+                    document.getElementById(tabId).classList.add('active');
+                });
             });
-        });
-        
-        // Close modal when clicking close button
-        closeBtn.addEventListener('click', () => {
-            modal.style.display = 'none';
-        });
-        
-        // Close modal when clicking outside of it
-        window.addEventListener('click', (e) => {
-            if (e.target === modal) {
+            
+            // Close modal when clicking close button
+            closeBtn.addEventListener('click', () => {
                 modal.style.display = 'none';
-            }
+            });
+            
+            // Close modal when clicking outside of it
+            window.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+            
+            // Set up region buttons
+            regionButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    // Update active button
+                    regionButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                    
+                    // Update current region
+                    currentRegion = {
+                        name: button.dataset.region,
+                        start: parseInt(button.dataset.start),
+                        end: parseInt(button.dataset.end)
+                    };
+                    
+                    // Load Pokémon for this region
+                    loadPokemonForRegion();
+                });
+            });
+            
+            // Load initial region (Kanto)
+            loadPokemonForRegion();
         });
+
+        // Function to load Pokémon for the current region
+        async function loadPokemonForRegion() {
+            pokedexContainer.innerHTML = '';
+            loadingIndicator.style.display = 'block';
+            
+            try {
+                // Create an array of all Pokémon IDs in this region
+                const pokemonIds = Array.from(
+                    { length: currentRegion.end - currentRegion.start + 1 },
+                    (_, i) => currentRegion.start + i
+                );
+                
+                // Create an array of promises for each Pokémon
+                const pokemonPromises = pokemonIds.map(id => 
+                    fetchPokemonDetails(`${POKEAPI_URL}pokemon/${id}`)
+                );
+                
+                // Wait for all Pokémon to load
+                const pokemonList = await Promise.all(pokemonPromises);
+                
+                // Hide loading indicator
+                loadingIndicator.style.display = 'none';
+                
+                // Display all Pokémon
+                pokemonList.forEach(pokemon => {
+                    if (pokemon) displayPokemon(pokemon);
+                });
+                
+            } catch (error) {
+                console.error("Failed to load Pokémon:", error);
+                loadingIndicator.textContent = `Failed to load Pokémon data: ${error.message}. Please try refreshing the page.`;
+                loadingIndicator.style.color = 'red';
+            }
+        }
 
         // Function to fetch details for a single Pokémon
         async function fetchPokemonDetails(url) {
@@ -329,15 +430,29 @@
                 // Get moves (limited to 20 for performance)
                 const moves = data.moves.slice(0, 20).map(moveInfo => moveInfo.move.name);
 
-                // --- Get Animated Sprite ---
-                // Prefer Gen V animated sprite, fall back through other options
-                const animatedSprite = data.sprites.versions?.['generation-v']?.['black-white']?.animated?.front_default;
-                const officialArtwork = data.sprites.other?.['official-artwork']?.front_default;
-                const defaultSprite = data.sprites.front_default;
-                const fallbackPlaceholder = `https://placehold.co/96x96/CCCCCC/333333?text=N/A`;
-
-                const spriteUrl = animatedSprite || officialArtwork || defaultSprite || fallbackPlaceholder;
-                // --- End Sprite Logic ---
+                // Get sprite - try different generations
+                let spriteUrl;
+                
+                // Try different sprite sources in order of preference
+                if (data.id <= 649) {
+                    // Gen 1-5 Pokémon - use animated sprites if available
+                    spriteUrl = data.sprites.versions?.['generation-v']?.['black-white']?.animated?.front_default;
+                }
+                
+                if (!spriteUrl) {
+                    // Try official artwork
+                    spriteUrl = data.sprites.other?.['official-artwork']?.front_default;
+                }
+                
+                if (!spriteUrl) {
+                    // Fall back to default sprite
+                    spriteUrl = data.sprites.front_default;
+                }
+                
+                if (!spriteUrl) {
+                    // Final fallback
+                    spriteUrl = `https://placehold.co/96x96/CCCCCC/333333?text=N/A`;
+                }
                 
                 // Get locations (from encounters)
                 let locations = [];
@@ -355,8 +470,7 @@
                     console.log("Error fetching locations:", e);
                 }
                 
-                // Get cry sound (from older games)
-                // Note: PokéAPI uses gen 5 cries which are in .ogg format
+                // Get cry sound
                 const cryUrl = `https://raw.githubusercontent.com/PokeAPI/cries/main/cries/pokemon/latest/${data.id}.ogg`;
 
                 // Return structured Pokémon data
@@ -522,42 +636,6 @@
             // Show the modal
             modal.style.display = 'block';
         }
-
-        // Main function to fetch the list and then display all Pokémon
-        async function fetchAndDisplayPokemon() {
-            try {
-                // Fetch the list of the first POKEMON_COUNT Pokémon
-                const listResponse = await fetch(`${POKEAPI_URL}pokemon?limit=${POKEMON_COUNT}&offset=0`);
-                 if (!listResponse.ok) {
-                    throw new Error(`HTTP error! status: ${listResponse.status} fetching Pokémon list`);
-                }
-                const listData = await listResponse.json();
-
-                // Create an array of promises, each fetching details for one Pokémon
-                const detailPromises = listData.results.map(pokemon => fetchPokemonDetails(pokemon.url));
-
-                // Wait for all detail fetch promises to resolve
-                const pokemonDetails = await Promise.all(detailPromises);
-
-                // Hide the loading indicator
-                loadingIndicator.style.display = 'none';
-
-                // Iterate through the fetched details and display each Pokémon
-                pokemonDetails.forEach(pokemon => {
-                    displayPokemon(pokemon);
-                });
-
-            } catch (error) {
-                // Log the error and update the loading indicator
-                console.error("Failed to load Pokédex:", error);
-                loadingIndicator.textContent = `Failed to load Pokémon data: ${error.message}. Please try refreshing the page.`;
-                loadingIndicator.style.color = 'red';
-            }
-        }
-
-        // Run the main fetch function when the DOM is fully loaded
-        document.addEventListener('DOMContentLoaded', fetchAndDisplayPokemon);
-
     </script>
 
 </body>
